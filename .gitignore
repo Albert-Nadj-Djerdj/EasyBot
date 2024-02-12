@@ -1,0 +1,5 @@
+/.env
+/commands
+/deploy-commands.js
+/events
+/node_modules
