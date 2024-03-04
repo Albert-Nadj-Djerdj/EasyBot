@@ -1,5 +1,4 @@
 /.env
-/commands
+/test-server.env
 /deploy-commands.js
-/events
 /node_modules
