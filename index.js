@@ -2,7 +2,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
-const { Sequelize } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 
 // Create a new client instance
 const client = new Client({
@@ -29,7 +29,17 @@ sequelize.authenticate().then(() => {
 	console.error('Unable to connect to the database: ', error);
 });
 
-require('./sequilize/bond').bond;
+
+require('./sequilize/bond')(sequelize, DataTypes);
+
+const Member = require('./sequilize/members')(sequelize, DataTypes);
+
+const Character = require('./sequilize/characters')(sequelize, DataTypes);
+
+require('./sequilize/dg_queues')(sequelize, DataTypes);
+
+Member.hasMany(Character);
+Character.belongsTo(Member);
 
 sequelize.sync().then(() => {
 	console.log('Schuldschein table created successfully!');
@@ -76,5 +86,3 @@ for (const file of eventFiles) {
 
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);
-
-exports.Client = client;
