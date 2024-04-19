@@ -1,5 +1,6 @@
-const { Events, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require('discord.js');
+const { Events } = require('discord.js');
 const { Sequelize, DataTypes, Op } = require('sequelize');
+const path = require('node:path');
 
 const sequelize = new Sequelize(
 	process.env.DATABASE_NAME,
@@ -75,46 +76,9 @@ module.exports = {
 				else {
 					Member.hasMany(Character);
 					Character.belongsTo(Member);
+					const memberProfilePost = await memberChannel.threads.create({ name: newMember.user.globalName + ' - (' + newMember.user.username + ')', message: { content: 'Profile in making.' } });
 
-					const memberProfileEmbed = {
-						color: 0xf522e3,
-						title: 'Member-Profil',
-						fields: [
-							{ name: 'Discord:', value: newMember.user.username, inline: false },
-							{ name: '\u200B', value: '\u200B', inline: false },
-							{ name: 'Mainchar:', value: '-', inline: false },
-							{ name: '\u200B', value: '\u200B', inline: false },
-						],
-					};
-
-					const maincharEdit = new ButtonBuilder()
-						.setCustomId('mainchar_edit')
-						.setLabel('Mainchar bearbeiten')
-						.setStyle(ButtonStyle.Primary);
-
-					const nebencharCreate = new ButtonBuilder()
-						.setCustomId('nebenchar_create')
-						.setLabel('Nebenchar hinzufügen')
-						.setStyle(ButtonStyle.Success);
-
-					const nebencharDelete = new ButtonBuilder()
-						.setCustomId('nebenchar_delete')
-						.setLabel('Nebenchar löschen')
-						.setStyle(ButtonStyle.Danger);
-
-					const abwesenheitAnmelden = new ButtonBuilder()
-						.setCustomId('abwesenheit_anmelden')
-						.setLabel('Abwesenheit anmelden')
-						.setStyle(ButtonStyle.Secondary);
-
-					const profileButtonRow = new ActionRowBuilder()
-						.addComponents(maincharEdit, nebencharCreate, nebencharDelete, abwesenheitAnmelden);
-
-
-					const memberProfilePost = await memberChannel.threads.create({ name: newMember.user.globalName + ' - (' + newMember.user.username + ')', message: { embeds: [memberProfileEmbed], components: [profileButtonRow] } });
-					await memberProfilePost.members.add(newMember.user.id);
-
-					await Member.create({
+					const memberCreated = await Member.create({
 						discord_name: newMember.user.username,
 						discord_global_name: newMember.user.globalName,
 						member_since: (new Date()).toLocaleString('de-DE', {
@@ -124,7 +88,7 @@ module.exports = {
 						}),
 						is_active: true,
 						characters: {
-							character_name: null,
+							character_name: '-',
 							is_main: true,
 							is_guild: true,
 						},
@@ -132,6 +96,20 @@ module.exports = {
 					}, {
 						include: [Character],
 					});
+
+					const memberProfileEmbed = require(path.join(__dirname, 'embeds/memberProfileEmbed.js'));
+					const memberProfileEmbedCreated = await memberProfileEmbed.embedCreate(memberCreated);
+
+					const profileButtonsRow = require(path.join(__dirname, 'actionrows/profileButtonsRow.js'));
+					const profileButtonsRowCreated = await profileButtonsRow.rowCreate(memberCreated, newMember.guild);
+
+					const messages = await memberProfilePost.messages.fetch();
+					console.log(messages.values().next().value);
+
+					const memberProfilePostUpdated = await messages.values().next().value.edit({ content: ' ', embeds: [memberProfileEmbedCreated], components: [profileButtonsRowCreated] });
+					console.log(memberProfilePostUpdated);
+
+					await memberProfilePost.members.add(newMember.user.id);
 				}
 			}
 			catch (e) {

@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
@@ -29,7 +29,6 @@ sequelize.authenticate().then(() => {
 	console.error('Unable to connect to the database: ', error);
 });
 
-
 require('./sequilize/bond')(sequelize, DataTypes);
 
 const Member = require('./sequilize/members')(sequelize, DataTypes);
@@ -38,8 +37,14 @@ const Character = require('./sequilize/characters')(sequelize, DataTypes);
 
 require('./sequilize/dg_queues')(sequelize, DataTypes);
 
-Member.hasMany(Character);
+const GuildContribution = require('./sequilize/guild_contribution')(sequelize, DataTypes);
+
+
+Member.hasOne(Character);
 Character.belongsTo(Member);
+
+Member.hasOne(GuildContribution);
+GuildContribution.belongsTo(Member);
 
 sequelize.sync().then(() => {
 	console.log('Schuldschein table created successfully!');
@@ -48,7 +53,7 @@ sequelize.sync().then(() => {
 });
 
 // Load all Commands from the commands folder
-/* client.commands = new Collection();
+client.commands = new Collection();
 
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
@@ -67,7 +72,7 @@ for (const folder of commandFolders) {
 			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
 		}
 	}
-}*/
+}
 
 // Load all Events from the events folder
 const eventsPath = path.join(__dirname, 'events');
