@@ -3,7 +3,7 @@ const path = require('node:path');
 
 module.exports = {
 	name: 'editMaincharModal',
-	async execute(interaction, Member, Character) {
+	async execute(interaction, Member, Character, DopePoints) {
 		await interaction.deferReply({ content: 'Updating Profile. This sometimes takes a minute..', ephemeral: true, fetchReply: true });
 		try {
 			const maincharName = interaction.fields.getTextInputValue('mainchar_name');
@@ -50,7 +50,10 @@ module.exports = {
 			const profileButtonsRow = require(path.join(__dirname, '../../actionrows/profileButtonsRow.js'));
 			const profileButtonsRowCreated = await profileButtonsRow.rowCreate(member, interaction.member.guild);
 
-			await interaction.message.edit({ embeds: [memberProfileEmbedCreated], components: [profileButtonsRowCreated] });
+			const dopePointsEmbed = require(path.join(__dirname, '../../embeds/dopePointsEmbed.js'));
+			const dopePointsEmbedCreated = await dopePointsEmbed.embedCreate(member, DopePoints);
+
+			await interaction.message.edit({ embeds: [memberProfileEmbedCreated, dopePointsEmbedCreated], components: [profileButtonsRowCreated] });
 
 			await interaction.editReply({
 				content: 'Profile edited',

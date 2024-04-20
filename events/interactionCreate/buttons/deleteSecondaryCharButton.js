@@ -4,7 +4,7 @@ const path = require('node:path');
 
 module.exports = {
 	name: 'deleteSecondaryCharButton',
-	async execute(interaction, Member, Character) {
+	async execute(interaction, Member, Character, DopePoints) {
 		try {
 			const discord_name = interaction.message.embeds[0].data.fields[0].value;
 
@@ -74,7 +74,10 @@ module.exports = {
 				const profileButtonsRow = require(path.join(__dirname, '../../actionrows/profileButtonsRow.js'));
 				const profileButtonsRowCreated = await profileButtonsRow.rowCreate(member, interaction.member.guild);
 
-				await interaction.message.edit({ embeds: [memberProfileEmbedCreated], components: [profileButtonsRowCreated] });
+				const dopePointsEmbed = require(path.join(__dirname, '../../embeds/dopePointsEmbed.js'));
+				const dopePointsEmbedCreated = await dopePointsEmbed.embedCreate(member, DopePoints);
+
+				await interaction.message.edit({ embeds: [memberProfileEmbedCreated, dopePointsEmbedCreated], components: [profileButtonsRowCreated] });
 
 				await interaction.deleteReply();
 				selectedChar.reply({

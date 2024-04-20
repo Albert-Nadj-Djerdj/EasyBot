@@ -3,7 +3,7 @@ const path = require('node:path');
 
 module.exports = {
 	name: 'registerAbsenceModal',
-	async execute(interaction, Member) {
+	async execute(interaction, Member, DopePoints) {
 		try {
 			const memberChannel = interaction.member.guild.channels.cache.get(process.env.MEMBER_CHANNEL_ID);
 			const abwesenheitChannel = interaction.member.guild.channels.cache.get(process.env.ABWESENHEIT_CHANNEL_ID);
@@ -29,7 +29,10 @@ module.exports = {
 				const profileButtonsRow = require(path.join(__dirname, '../../actionrows/profileButtonsRow.js'));
 				const profileButtonsRowCreated = await profileButtonsRow.rowCreate(member, interaction.member.guild);
 
-				await interaction.message.edit({ embeds: [memberProfileEmbedCreated], components: [profileButtonsRowCreated] });
+				const dopePointsEmbed = require(path.join(__dirname, '../../embeds/dopePointsEmbed.js'));
+				const dopePointsEmbedCreated = await dopePointsEmbed.embedCreate(member, DopePoints);
+
+				await interaction.message.edit({ embeds: [memberProfileEmbedCreated, dopePointsEmbedCreated], components: [profileButtonsRowCreated] });
 
 				await interaction.reply({
 					content: 'Thanks and see you soon!',

@@ -1,4 +1,6 @@
+const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, bold, quote } = require('discord.js');
 const cron = require('cron');
+const wait = require('node:timers/promises').setTimeout;
 
 module.exports = {
 	name: 'icewitchBossCronMessage',
@@ -7,17 +9,22 @@ module.exports = {
 
 		await guild.members.fetch();
 
-		const timing = '45 0,3,6,9,12,15,18,21 * * *';
-		// Post the Icewitch-Boss Message
-		const iceWitchBossMessageCron = new cron.CronJob(timing, async () => {
+		// Post the Front-Mage-Event Message
+		const frontMageMessageCron = new cron.CronJob('40 3,9,15,21 * * *', async () => {
 
 			const channel = guild.channels.cache.get(process.env.BOSS_CHANNEL_ID);
 
+			const collectorTime = 900_000;
+			const deleteFMM = 1_200_000;
 			const hours = new Date().getHours() + 2;
 			const min = 59;
 			const spawnDate = new Date(new Date().setHours(hours, min));
 
-			const color = 0xf522e3;
+			let memberAmount = '0';
+			let totalDamage = '0';
+			let status = 'Not enough damage';
+			const neededDamage = '80';
+			let color = 0xf522e3;
 			const file = './assets/png/eishexe.png';
 
 			const embed = {
@@ -36,26 +43,212 @@ module.exports = {
 						month: '2-digit',
 						year: 'numeric',
 					}), inline: true },
+					{ name: '\u200B', value: '\u200B', inline: false },
+					{ name: 'Member registrated:', value: memberAmount, inline: true },
+					{ name: 'Total damage (in K):', value: totalDamage, inline: true },
+					{ name: '\u200B', value: '\u200B', inline: false },
+					{ name: 'Needed damage:', value: neededDamage, inline: true },
+					{ name: 'Status:', value: status, inline: true },
 				],
 			};
 
-			channel.send({
-				content: `Hey <@&${process.env.EISHEXE_MENTION_ID}>, The Icewitch will appear in a few minutes! Get on your way now!`,
+
+			const button25k = new ButtonBuilder()
+				.setCustomId('2.5')
+				.setLabel('2.5k')
+				.setStyle(ButtonStyle.Primary);
+			const button50k = new ButtonBuilder()
+				.setCustomId('5.0')
+				.setLabel('5.0k')
+				.setStyle(ButtonStyle.Primary);
+			const button75k = new ButtonBuilder()
+				.setCustomId('7.5')
+				.setLabel('7.5k')
+				.setStyle(ButtonStyle.Primary);
+			const button100k = new ButtonBuilder()
+				.setCustomId('10')
+				.setLabel('10k')
+				.setStyle(ButtonStyle.Primary);
+			const button125k = new ButtonBuilder()
+				.setCustomId('12.5')
+				.setLabel('12.5k')
+				.setStyle(ButtonStyle.Primary);
+			const button150k = new ButtonBuilder()
+				.setCustomId('15')
+				.setLabel('15k')
+				.setStyle(ButtonStyle.Primary);
+			const button175k = new ButtonBuilder()
+				.setCustomId('17.5')
+				.setLabel('17.5k')
+				.setStyle(ButtonStyle.Primary);
+			const button200k = new ButtonBuilder()
+				.setCustomId('20')
+				.setLabel('20k')
+				.setStyle(ButtonStyle.Primary);
+
+			const dmgRow = new ActionRowBuilder().addComponents(button25k, button50k, button75k, button100k);
+			const dmg2Row = new ActionRowBuilder().addComponents(button125k, button150k, button175k, button200k);
+
+			const frontMageMessage = await channel.send({
+				content: `Hey <@&${process.env.FRONTI_MENTION_ID}>, \n\nThe battle against the Ice Witch begins at ${spawnDate.getHours()}. If you would like to participate, please respond with your approximate damage.\nThe status regarding the damage achieved will be announced 15 minutes before the spawn. If there is sufficient participation, we will meet at the spawnpoint 2 minutes before.\n\n ${bold('Loot:')} \n${quote('All relics will be collected on the guild storage char. Participants will be rewarded with Dope Points and can purchase relics from the store.')}\n\nRegistration ends 5 minutes before spawn!`,
 				embeds: [embed],
 				files: [file],
-			}).then((message) => {
-				setTimeout(async () => {
-					try {
-						await message.delete();
+				components: [dmgRow, dmg2Row],
+			});
 
+			const collector = frontMageMessage.createMessageComponentCollector({ componentType: ComponentType.Button, time: collectorTime });
+
+			const userAbmeldungen = [];
+			collector.on('collect', async m => {
+
+				memberAmount = (parseInt(memberAmount) + 1);
+				totalDamage = (parseInt(totalDamage) + parseInt(m.customId));
+
+				if (parseInt(totalDamage) >= parseInt(neededDamage)) {
+					status = 'Min. damage reached';
+					color = 0x37eb34;
+				}
+				else {
+					status = 'Not enough damage';
+					color = 0xf522e3;
+				}
+
+				const embedUpdate = {
+					color: color,
+					title: 'Icewitch',
+					thumbnail: {
+						url: 'attachment://eishexe.png',
+					},
+					fields: [
+						{ name: 'Time:', value: spawnDate.toLocaleString('de-DE', {
+							hour: '2-digit',
+							minute: '2-digit',
+						}), inline: true },
+						{ name: 'Date:', value: spawnDate.toLocaleString('de-DE', {
+							day: '2-digit',
+							month: '2-digit',
+							year: 'numeric',
+						}), inline: true },
+						{ name: '\u200B', value: '\u200B', inline: false },
+						{ name: 'Member registrated:', value: memberAmount, inline: true },
+						{ name: 'Total damage (in K):', value: totalDamage, inline: true },
+						{ name: '\u200B', value: '\u200B', inline: false },
+						{ name: 'Needed damage:', value: neededDamage, inline: true },
+						{ name: 'Status:', value: status, inline: true },
+					],
+				};
+
+				m.message.edit({ embeds: [embedUpdate], files: [file] });
+
+				const abmeldenButton = new ButtonBuilder()
+					.setCustomId('abmelden')
+					.setLabel('Withdraw the registration')
+					.setStyle(ButtonStyle.Danger);
+
+				const abmeldeRow = new ActionRowBuilder().addComponents(abmeldenButton);
+
+				m.reply({ components: [abmeldeRow], content: 'Registered with: ' + m.customId + 'K damage', ephemeral: true, fetchReply: true }).then(repliedMessage => {
+					const collector2 = repliedMessage.createMessageComponentCollector({ componentType: ComponentType.Button });
+
+					// Absage interaction
+					collector2.on('collect', async m2 => {
+						memberAmount = (parseInt(memberAmount) - 1);
+						totalDamage = (parseInt(totalDamage) - parseInt(m.customId));
+
+						userAbmeldungen.push(m2.user.id);
+
+						if (parseInt(totalDamage) >= parseInt(neededDamage)) {
+							status = 'Min. damage reached';
+							color = 0x37eb34;
+						}
+						else {
+							status = 'Not enough damage';
+							color = 0xf522e3;
+						}
+
+						const embedUpdateAbmeldung = {
+							color: color,
+							title: 'Icewitch',
+							thumbnail: {
+								url: 'attachment://eishexe.png',
+							},
+							fields: [
+								{ name: 'Time:', value: spawnDate.toLocaleString('de-DE', {
+									hour: '2-digit',
+									minute: '2-digit',
+								}), inline: true },
+								{ name: 'Date:', value: spawnDate.toLocaleString('de-DE', {
+									day: '2-digit',
+									month: '2-digit',
+									year: 'numeric',
+								}), inline: true },
+								{ name: '\u200B', value: '\u200B', inline: false },
+								{ name: 'Member registrated:', value: memberAmount, inline: true },
+								{ name: 'Total damage (in K):', value: totalDamage, inline: true },
+								{ name: '\u200B', value: '\u200B', inline: false },
+								{ name: 'Needed damage:', value: neededDamage, inline: true },
+								{ name: 'Status:', value: status, inline: true },
+							],
+						};
+
+						m.message.edit({ embeds: [embedUpdateAbmeldung], files: [file] });
+						m.deleteReply();
+						m2.reply({ content: 'Registration succesfully withdrawed', ephemeral: true });
+						await wait(15_000);
+						m2.deleteReply();
+					});
+				}).catch((e) => console.log(e));
+			});
+
+			collector.on('end', async m => {
+				let thread = '';
+				if (status === 'Gesamtschaden erreicht') {
+					thread = await channel.threads.create({
+						name: `Icewitch ${spawnDate.toLocaleString('de-DE', {
+							hour: '2-digit',
+							minute: '2-digit',
+						})} o´Clock - ${spawnDate.toLocaleString('de-DE', {
+							day: '2-digit',
+							month: '2-digit',
+							year: 'numeric',
+						})}`,
+						reason: 'Dropps etc',
+					});
+				}
+
+				const usersToPing = [];
+				m.forEach((buttonInteraction) => {
+					usersToPing.push(buttonInteraction.user.id);
+				});
+
+				userAbmeldungen.forEach((userId) => {
+					const index = usersToPing.indexOf(userId);
+					if (index > -1) {
+						usersToPing.splice(index, 1);
 					}
-					catch (e) {
-						console.log(e);
+				});
+
+				const usersToPingUnique = [... new Set(usersToPing) ];
+
+				usersToPingUnique.forEach(async (user) => {
+					let contentString = '';
+					if (status === 'Min damage reached') {
+						contentString = `<@${user}> --- The icewitch spawns in 5 minutes. Please do not start any more dungeons! Please screenshot all drops and share them in the thread below.\n<#${thread.id}>`;
 					}
-				}, 1_200_000);
-			}).catch((e) => { console.log('29' + e); });
+					else {
+						contentString = `<@${user}> --- The icewitch has been canceled.`;
+					}
+
+					const res = await guild.members.fetch();
+					const schuldnerObjekt = res.find((member) => member.user.id === user);
+					schuldnerObjekt.send({ content:  contentString }).catch((e) => { console.log(e); });
+				});
+			});
+
+			await wait(deleteFMM);
+			frontMageMessage.delete();
 		});
 
-		iceWitchBossMessageCron.start();
+		frontMageMessageCron.start();
 	},
 };

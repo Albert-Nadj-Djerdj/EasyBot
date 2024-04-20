@@ -37,14 +37,14 @@ const Character = require('./sequilize/characters')(sequelize, DataTypes);
 
 require('./sequilize/dg_queues')(sequelize, DataTypes);
 
-const GuildContribution = require('./sequilize/guild_contribution')(sequelize, DataTypes);
+const DopePoints = require('./sequilize/dope_points')(sequelize, DataTypes);
 
 
-Member.hasOne(Character);
+Member.hasMany(Character);
 Character.belongsTo(Member);
 
-Member.hasOne(GuildContribution);
-GuildContribution.belongsTo(Member);
+Member.hasOne(DopePoints);
+DopePoints.belongsTo(Member);
 
 sequelize.sync().then(() => {
 	console.log('Schuldschein table created successfully!');
@@ -82,10 +82,10 @@ for (const file of eventFiles) {
 	const filePath = path.join(eventsPath, file);
 	const event = require(filePath);
 	if (event.once) {
-		client.once(event.name, (...args) => event.execute(...args));
+		client.once(event.name, (...args) => event.execute(...args, Member, DopePoints));
 	}
 	else {
-		client.on(event.name, (...args) => event.execute(...args));
+		client.on(event.name, (...args) => event.execute(...args, Member, DopePoints));
 	}
 }
 

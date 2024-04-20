@@ -1,10 +1,10 @@
 module.exports = function(sequelize, DataTypes) {
-	return sequelize.define('guild_contribution', {
+	return sequelize.define('dope_points', {
 		contribution_sum: {
 			type: DataTypes.BIGINT,
 			defaultValue: 10,
 		},
-		cuntribution_pot: {
+		dope_points: {
 			type: DataTypes.BIGINT,
 			defaultValue: 0,
 		},

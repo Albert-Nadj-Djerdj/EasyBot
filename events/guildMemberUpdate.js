@@ -19,6 +19,7 @@ module.exports = {
 		const newRoles = await newMember.roles.cache;
 		const Member = require('.././sequilize/members')(sequelize, DataTypes);
 		const Character = require('.././sequilize/characters')(sequelize, DataTypes);
+		const DopePoints = require('.././sequilize/dope_points')(sequelize, DataTypes);
 
 		const oldHasGuildRole = oldRoles.has(process.env.GUILD_ROLE_ID);
 		const oldHasGuildTestRole = oldRoles.has(process.env.GUILD_TEST_ROLE_ID);
@@ -103,11 +104,12 @@ module.exports = {
 					const profileButtonsRow = require(path.join(__dirname, 'actionrows/profileButtonsRow.js'));
 					const profileButtonsRowCreated = await profileButtonsRow.rowCreate(memberCreated, newMember.guild);
 
-					const messages = await memberProfilePost.messages.fetch();
-					console.log(messages.values().next().value);
+					const dopePointsEmbed = require(path.join(__dirname, 'embeds/dopePointsEmbed.js'));
+					const dopePointsEmbedCreated = await dopePointsEmbed.embedCreate(memberCreated, DopePoints);
 
-					const memberProfilePostUpdated = await messages.values().next().value.edit({ content: ' ', embeds: [memberProfileEmbedCreated], components: [profileButtonsRowCreated] });
-					console.log(memberProfilePostUpdated);
+					const messages = await memberProfilePost.messages.fetch();
+
+					await messages.values().next().value.edit({ content: ' ', embeds: [memberProfileEmbedCreated, dopePointsEmbedCreated], components: [profileButtonsRowCreated] });
 
 					await memberProfilePost.members.add(newMember.user.id);
 				}

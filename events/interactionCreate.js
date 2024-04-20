@@ -16,9 +16,13 @@ const Member = require('../sequilize/members')(sequelize, DataTypes);
 const Character = require('../sequilize/characters')(sequelize, DataTypes);
 const Bond = require('../sequilize/bond')(sequelize, DataTypes);
 const DungeonQueue = require('../sequilize/dg_queues')(sequelize, DataTypes);
+const DopePoints = require('../sequilize/dope_points')(sequelize, DataTypes);
 
 Member.hasMany(Character);
 Character.belongsTo(Member);
+
+Member.hasOne(DopePoints);
+DopePoints.belongsTo(Member);
 
 module.exports = {
 	name: Events.InteractionCreate,
@@ -71,19 +75,19 @@ module.exports = {
 			// React to "Mainchar bearbeiten" button
 			if (interaction.customId === 'mainchar_edit') {
 				const editMaincharButton = require(path.join(__dirname, 'interactionCreate/buttons/editMaincharButton.js'));
-				editMaincharButton.execute(interaction, Character, Member);
+				editMaincharButton.execute(interaction, Character, Member, DopePoints);
 			}
 
 			// React to "Nebenchar erstellen" button
 			if (interaction.customId === 'nebenchar_create') {
 				const createSecondaryCharButton = require(path.join(__dirname, 'interactionCreate/buttons/createSecondaryCharButton.js'));
-				createSecondaryCharButton.execute(interaction);
+				createSecondaryCharButton.execute(interaction, DopePoints);
 			}
 
 			// React to "Nebenchar löschen" button
 			if (interaction.customId === 'nebenchar_delete') {
 				const deleteSecondaryCharButton = require(path.join(__dirname, 'interactionCreate/buttons/deleteSecondaryCharButton.js'));
-				deleteSecondaryCharButton.execute(interaction, Member, Character);
+				deleteSecondaryCharButton.execute(interaction, Member, Character, DopePoints);
 			}
 
 			// React to "Abwesenheit anmelden" button
@@ -95,7 +99,7 @@ module.exports = {
 			// React to "Wieder zurück!" button
 			if (interaction.customId === 'anwesenheit_melden') {
 				const registerPresenceButton = require(path.join(__dirname, 'interactionCreate/buttons/registerPresenceButton.js'));
-				registerPresenceButton.execute(interaction, Member);
+				registerPresenceButton.execute(interaction, Member, DopePoints);
 			}
 
 			// React to "Queue starten" Button
@@ -122,19 +126,19 @@ module.exports = {
 			// React to "Mainchar edit modal"
 			if (interaction.customId === 'mainchar_modal') {
 				const editMaincharModal = require(path.join(__dirname, 'interactionCreate/modals/editMaincharModal.js'));
-				editMaincharModal.execute(interaction, Member, Character);
+				editMaincharModal.execute(interaction, Member, Character, DopePoints);
 			}
 
 			// React to "Nebenchar create modal"
 			if (interaction.customId === 'nebenchar_modal') {
 				const createSecondaryCharModal = require(path.join(__dirname, 'interactionCreate/modals/createSecondaryCharModal.js'));
-				createSecondaryCharModal.execute(interaction, Member, Character);
+				createSecondaryCharModal.execute(interaction, Member, Character, DopePoints);
 			}
 
 			// React to "Abwesenheit modal"
 			if (interaction.customId === 'abwesenheit_modal') {
 				const registerAbsenceModal = require(path.join(__dirname, 'interactionCreate/modals/registerAbsenceModal.js'));
-				registerAbsenceModal.execute(interaction, Member, Character);
+				registerAbsenceModal.execute(interaction, Member, Character, DopePoints);
 			}
 		}
 	},
