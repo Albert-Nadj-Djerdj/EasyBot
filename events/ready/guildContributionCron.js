@@ -8,8 +8,7 @@ module.exports = {
 
 		const memberList = await guild.members.fetch();
 
-		const timing = '* * * * *';
-		// Post the Icewitch-Boss Message
+		const timing = '0 16 * * SUN';
 		const guildContributionCron = new cron.CronJob(timing, async () => {
 
 			try {

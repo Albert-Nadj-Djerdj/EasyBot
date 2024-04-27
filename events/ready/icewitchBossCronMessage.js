@@ -45,9 +45,9 @@ module.exports = {
 					}), inline: true },
 					{ name: '\u200B', value: '\u200B', inline: false },
 					{ name: 'Member registrated:', value: memberAmount, inline: true },
-					{ name: 'Total damage (in K):', value: totalDamage, inline: true },
+					{ name: 'Total damage (in K):', value: totalDamage.toString(), inline: true },
 					{ name: '\u200B', value: '\u200B', inline: false },
-					{ name: 'Needed damage:', value: neededDamage, inline: true },
+					{ name: 'Needed damage:', value: neededDamage.toString(), inline: true },
 					{ name: 'Status:', value: status, inline: true },
 				],
 			};
@@ -66,7 +66,7 @@ module.exports = {
 				.setLabel('7.5k')
 				.setStyle(ButtonStyle.Primary);
 			const button100k = new ButtonBuilder()
-				.setCustomId('10')
+				.setCustomId('10.0')
 				.setLabel('10k')
 				.setStyle(ButtonStyle.Primary);
 			const button125k = new ButtonBuilder()
@@ -74,7 +74,7 @@ module.exports = {
 				.setLabel('12.5k')
 				.setStyle(ButtonStyle.Primary);
 			const button150k = new ButtonBuilder()
-				.setCustomId('15')
+				.setCustomId('15.0')
 				.setLabel('15k')
 				.setStyle(ButtonStyle.Primary);
 			const button175k = new ButtonBuilder()
@@ -82,7 +82,7 @@ module.exports = {
 				.setLabel('17.5k')
 				.setStyle(ButtonStyle.Primary);
 			const button200k = new ButtonBuilder()
-				.setCustomId('20')
+				.setCustomId('20.0')
 				.setLabel('20k')
 				.setStyle(ButtonStyle.Primary);
 
@@ -90,7 +90,7 @@ module.exports = {
 			const dmg2Row = new ActionRowBuilder().addComponents(button125k, button150k, button175k, button200k);
 
 			const frontMageMessage = await channel.send({
-				content: `Hey <@&${process.env.FRONTI_MENTION_ID}>, \n\nThe battle against the Ice Witch begins at ${spawnDate.getHours()}. If you would like to participate, please respond with your approximate damage.\nThe status regarding the damage achieved will be announced 15 minutes before the spawn. If there is sufficient participation, we will meet at the spawnpoint 2 minutes before.\n\n ${bold('Loot:')} \n${quote('All relics will be collected on the guild storage char. Participants will be rewarded with Dope Points and can purchase relics from the store.')}\n\nRegistration ends 5 minutes before spawn!`,
+				content: `Hey <@&${process.env.EISHEXE_MENTION_ID}>, \n\nThe battle against the Ice Witch begins at ${spawnDate.getHours()}:${spawnDate.getMinutes()}. If you would like to participate, please respond with your approximate damage.\nThe status regarding the damage achieved will be announced 15 minutes before the spawn. If there is sufficient participation, we will meet at the spawnpoint 2 minutes before.\n\n ${bold('Loot:')} \n${quote('All relics will be collected on the guild storage char. Participants will be rewarded with Dope Points and can purchase relics from the leadership.')}\n\nRegistration ends 5 minutes before spawn!`,
 				embeds: [embed],
 				files: [file],
 				components: [dmgRow, dmg2Row],
@@ -102,9 +102,9 @@ module.exports = {
 			collector.on('collect', async m => {
 
 				memberAmount = (parseInt(memberAmount) + 1);
-				totalDamage = (parseInt(totalDamage) + parseInt(m.customId));
+				totalDamage = (parseFloat(totalDamage) + parseFloat(m.customId));
 
-				if (parseInt(totalDamage) >= parseInt(neededDamage)) {
+				if (parseFloat(totalDamage) >= parseFloat(neededDamage)) {
 					status = 'Min. damage reached';
 					color = 0x37eb34;
 				}
@@ -131,9 +131,9 @@ module.exports = {
 						}), inline: true },
 						{ name: '\u200B', value: '\u200B', inline: false },
 						{ name: 'Member registrated:', value: memberAmount, inline: true },
-						{ name: 'Total damage (in K):', value: totalDamage, inline: true },
+						{ name: 'Total damage (in K):', value: totalDamage.toString(), inline: true },
 						{ name: '\u200B', value: '\u200B', inline: false },
-						{ name: 'Needed damage:', value: neededDamage, inline: true },
+						{ name: 'Needed damage:', value: neededDamage.toString(), inline: true },
 						{ name: 'Status:', value: status, inline: true },
 					],
 				};
@@ -153,11 +153,11 @@ module.exports = {
 					// Absage interaction
 					collector2.on('collect', async m2 => {
 						memberAmount = (parseInt(memberAmount) - 1);
-						totalDamage = (parseInt(totalDamage) - parseInt(m.customId));
+						totalDamage = (parseFloat(totalDamage) - parseFloat(m.customId));
 
 						userAbmeldungen.push(m2.user.id);
 
-						if (parseInt(totalDamage) >= parseInt(neededDamage)) {
+						if (parseFloat(totalDamage) >= parseFloat(neededDamage)) {
 							status = 'Min. damage reached';
 							color = 0x37eb34;
 						}
@@ -184,9 +184,9 @@ module.exports = {
 								}), inline: true },
 								{ name: '\u200B', value: '\u200B', inline: false },
 								{ name: 'Member registrated:', value: memberAmount, inline: true },
-								{ name: 'Total damage (in K):', value: totalDamage, inline: true },
+								{ name: 'Total damage (in K):', value: totalDamage.toString(), inline: true },
 								{ name: '\u200B', value: '\u200B', inline: false },
-								{ name: 'Needed damage:', value: neededDamage, inline: true },
+								{ name: 'Needed damage:', value: neededDamage.toString(), inline: true },
 								{ name: 'Status:', value: status, inline: true },
 							],
 						};
@@ -202,7 +202,7 @@ module.exports = {
 
 			collector.on('end', async m => {
 				let thread = '';
-				if (status === 'Gesamtschaden erreicht') {
+				if (status === 'Min. damage reached') {
 					thread = await channel.threads.create({
 						name: `Icewitch ${spawnDate.toLocaleString('de-DE', {
 							hour: '2-digit',
@@ -217,8 +217,9 @@ module.exports = {
 				}
 
 				const usersToPing = [];
-				m.forEach((buttonInteraction) => {
+				m.forEach(async (buttonInteraction) => {
 					usersToPing.push(buttonInteraction.user.id);
+					await buttonInteraction.deleteReply();
 				});
 
 				userAbmeldungen.forEach((userId) => {
