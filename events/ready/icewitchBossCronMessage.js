@@ -9,6 +9,9 @@ module.exports = {
 
 		await guild.members.fetch();
 
+		// '40 3,9,15,21 * * *'
+		// const collectorTime = 900_000;
+		// const deleteFMM = 1_200_000;
 		// Post the Front-Mage-Event Message
 		const frontMageMessageCron = new cron.CronJob('40 3,9,15,21 * * *', async () => {
 
@@ -90,7 +93,7 @@ module.exports = {
 			const dmg2Row = new ActionRowBuilder().addComponents(button125k, button150k, button175k, button200k);
 
 			const frontMageMessage = await channel.send({
-				content: `Hey <@&${process.env.EISHEXE_MENTION_ID}>, \n\nThe battle against the Ice Witch begins at ${spawnDate.getHours()}:${spawnDate.getMinutes()}. If you would like to participate, please respond with your approximate damage.\nThe status regarding the damage achieved will be announced 15 minutes before the spawn. If there is sufficient participation, we will meet at the spawnpoint 2 minutes before.\n\n ${bold('Loot:')} \n${quote('All relics will be collected on the guild storage char. Participants will be rewarded with Dope Points and can purchase relics from the leadership.')}\n\nRegistration ends 5 minutes before spawn!`,
+				content: `Hey <@&${process.env.EISHEXE_MENTION_ID}>, \n\nThe battle against the Ice Witch begins at ${spawnDate.getHours()}:${spawnDate.getMinutes()}. If you would like to participate, please respond with your approximate damage.\nThe status regarding the damage achieved will be announced 5 minutes before the spawn. If there is sufficient participation, we will meet at the spawnpoint 2 minutes before.\n\n ${bold('Loot:')} \n${quote('All relics will be collected on the guild storage char. Participants will be rewarded with Dope Points and can purchase relics from the leadership.')}\n\nRegistration ends 5 minutes before spawn!`,
 				embeds: [embed],
 				files: [file],
 				components: [dmgRow, dmg2Row],
@@ -99,6 +102,8 @@ module.exports = {
 			const collector = frontMageMessage.createMessageComponentCollector({ componentType: ComponentType.Button, time: collectorTime });
 
 			const userAbmeldungen = [];
+			const userAbmeldungenNamen = [];
+
 			collector.on('collect', async m => {
 
 				memberAmount = (parseInt(memberAmount) + 1);
@@ -156,6 +161,7 @@ module.exports = {
 						totalDamage = (parseFloat(totalDamage) - parseFloat(m.customId));
 
 						userAbmeldungen.push(m2.user.id);
+						userAbmeldungenNamen.push(m2.user.username);
 
 						if (parseFloat(totalDamage) >= parseFloat(neededDamage)) {
 							status = 'Min. damage reached';
@@ -202,6 +208,39 @@ module.exports = {
 
 			collector.on('end', async m => {
 				let thread = '';
+
+				const usersToPing = [];
+				const usersToMention = [];
+
+				m.forEach(async (buttonInteraction) => {
+					usersToPing.push(buttonInteraction.user.id);
+					usersToMention.push(buttonInteraction.user.username);
+
+					try {
+						await buttonInteraction.deleteReply();
+					}
+					catch (e) {
+						console.log(e);
+					}
+				});
+
+				userAbmeldungen.forEach((userId) => {
+					const index = usersToPing.indexOf(userId);
+					if (index > -1) {
+						usersToPing.splice(index, 1);
+					}
+				});
+
+				userAbmeldungenNamen.forEach((userName) => {
+					const index2 = usersToMention.indexOf(userName);
+					if (index2 > -1) {
+						usersToPing.splice(index2, 1);
+					}
+				});
+
+				const usersToPingUnique = [... new Set(usersToPing) ];
+				const usersToMentionUnique = [... new Set(usersToMention) ];
+
 				if (status === 'Min. damage reached') {
 					thread = await channel.threads.create({
 						name: `Icewitch ${spawnDate.toLocaleString('de-DE', {
@@ -214,26 +253,15 @@ module.exports = {
 						})}`,
 						reason: 'Dropps etc',
 					});
+
+					await thread.send({
+						content: usersToMentionUnique.toString(),
+					});
 				}
-
-				const usersToPing = [];
-				m.forEach(async (buttonInteraction) => {
-					usersToPing.push(buttonInteraction.user.id);
-					await buttonInteraction.deleteReply();
-				});
-
-				userAbmeldungen.forEach((userId) => {
-					const index = usersToPing.indexOf(userId);
-					if (index > -1) {
-						usersToPing.splice(index, 1);
-					}
-				});
-
-				const usersToPingUnique = [... new Set(usersToPing) ];
 
 				usersToPingUnique.forEach(async (user) => {
 					let contentString = '';
-					if (status === 'Min damage reached') {
+					if (status === 'Min. damage reached') {
 						contentString = `<@${user}> --- The icewitch spawns in 5 minutes. Please do not start any more dungeons! Please screenshot all drops and share them in the thread below.\n<#${thread.id}>`;
 					}
 					else {

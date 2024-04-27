@@ -5,6 +5,7 @@ module.exports = {
 		const [dopePoints] = await DopePoints.findOrCreate({
 			where: { memberId: member.dataValues.id },
 			defaults: {
+				dope_points: 20,
 				memberId: member.dataValues.id,
 			},
 		});

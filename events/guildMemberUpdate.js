@@ -21,6 +21,9 @@ module.exports = {
 		const Character = require('.././sequilize/characters')(sequelize, DataTypes);
 		const DopePoints = require('.././sequilize/dope_points')(sequelize, DataTypes);
 
+		Member.hasOne(DopePoints);
+		DopePoints.belongsTo(Member);
+
 		const oldHasGuildRole = oldRoles.has(process.env.GUILD_ROLE_ID);
 		const oldHasGuildTestRole = oldRoles.has(process.env.GUILD_TEST_ROLE_ID);
 		const newHasGuildRole = newRoles.has(process.env.GUILD_ROLE_ID);
@@ -81,7 +84,7 @@ module.exports = {
 
 					const memberCreated = await Member.create({
 						discord_name: newMember.user.username,
-						discord_global_name: newMember.user.globalName,
+						discord_global_name: newMember.user.globalName ?? newMember.user.username,
 						member_since: (new Date()).toLocaleString('de-DE', {
 							day: '2-digit',
 							month: '2-digit',
