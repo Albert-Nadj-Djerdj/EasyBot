@@ -7,6 +7,7 @@ module.exports = {
 			defaults: {
 				dope_points: 20,
 				memberId: member.dataValues.id,
+				contribution_sum: 25,
 			},
 		});
 

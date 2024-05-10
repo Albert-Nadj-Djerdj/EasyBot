@@ -13,7 +13,7 @@ module.exports = {
 		// const collectorTime = 900_000;
 		// const deleteFMM = 1_200_000;
 		// Post the Front-Mage-Event Message
-		const frontMageMessageCron = new cron.CronJob('40 3,9,15,21 * * *', async () => {
+		const icewitchMessageCron = new cron.CronJob('40 3,9,15,21 * * *', async () => {
 
 			const channel = guild.channels.cache.get(process.env.BOSS_CHANNEL_ID);
 
@@ -88,15 +88,32 @@ module.exports = {
 				.setCustomId('20.0')
 				.setLabel('20k')
 				.setStyle(ButtonStyle.Primary);
+			const button250k = new ButtonBuilder()
+				.setCustomId('25.0')
+				.setLabel('25k')
+				.setStyle(ButtonStyle.Primary);
+			const button300k = new ButtonBuilder()
+				.setCustomId('30.0')
+				.setLabel('30k')
+				.setStyle(ButtonStyle.Primary);
+			const button350k = new ButtonBuilder()
+				.setCustomId('35.0')
+				.setLabel('35k')
+				.setStyle(ButtonStyle.Primary);
+			const buttonPVP = new ButtonBuilder()
+				.setCustomId('0.0')
+				.setLabel('PVP')
+				.setStyle(ButtonStyle.Danger);
 
 			const dmgRow = new ActionRowBuilder().addComponents(button25k, button50k, button75k, button100k);
 			const dmg2Row = new ActionRowBuilder().addComponents(button125k, button150k, button175k, button200k);
+			const dmg3Row = new ActionRowBuilder().addComponents(button250k, button300k, button350k, buttonPVP);
 
 			const frontMageMessage = await channel.send({
 				content: `Hey <@&${process.env.EISHEXE_MENTION_ID}>, \n\nThe battle against the Ice Witch begins at ${spawnDate.getHours()}:${spawnDate.getMinutes()}. If you would like to participate, please respond with your approximate damage.\nThe status regarding the damage achieved will be announced 5 minutes before the spawn. If there is sufficient participation, we will meet at the spawnpoint 2 minutes before.\n\n ${bold('Loot:')} \n${quote('All relics will be collected on the guild storage char. Participants will be rewarded with Dope Points and can purchase relics from the leadership.')}\n\nRegistration ends 5 minutes before spawn!`,
 				embeds: [embed],
 				files: [file],
-				components: [dmgRow, dmg2Row],
+				components: [dmgRow, dmg2Row, dmg3Row],
 			});
 
 			const collector = frontMageMessage.createMessageComponentCollector({ componentType: ComponentType.Button, time: collectorTime });
@@ -241,19 +258,19 @@ module.exports = {
 				const usersToPingUnique = [... new Set(usersToPing) ];
 				const usersToMentionUnique = [... new Set(usersToMention) ];
 
-				if (status === 'Min. damage reached') {
-					thread = await channel.threads.create({
-						name: `Icewitch ${spawnDate.toLocaleString('de-DE', {
-							hour: '2-digit',
-							minute: '2-digit',
-						})} o´Clock - ${spawnDate.toLocaleString('de-DE', {
-							day: '2-digit',
-							month: '2-digit',
-							year: 'numeric',
-						})}`,
-						reason: 'Dropps etc',
-					});
+				thread = await channel.threads.create({
+					name: `Icewitch ${spawnDate.toLocaleString('de-DE', {
+						hour: '2-digit',
+						minute: '2-digit',
+					})} o´Clock - ${spawnDate.toLocaleString('de-DE', {
+						day: '2-digit',
+						month: '2-digit',
+						year: 'numeric',
+					})}`,
+					reason: 'Dropps etc',
+				});
 
+				if (status === 'Min. damage reached') {
 					await thread.send({
 						content: usersToMentionUnique.toString(),
 					});
@@ -262,7 +279,7 @@ module.exports = {
 				usersToPingUnique.forEach(async (user) => {
 					let contentString = '';
 					if (status === 'Min. damage reached') {
-						contentString = `<@${user}> --- The icewitch spawns in 5 minutes. Please do not start any more dungeons! Please screenshot all drops and share them in the thread below.\n<#${thread.id}>`;
+						contentString = `<@${user}> --- The icewitch spawns in 5 minutes. Please do not start any more dungeons! Participants are listed in the thread below.\n<#${thread.id}>`;
 					}
 					else {
 						contentString = `<@${user}> --- The icewitch has been canceled.`;
@@ -278,6 +295,6 @@ module.exports = {
 			frontMageMessage.delete();
 		});
 
-		frontMageMessageCron.start();
+		icewitchMessageCron.start();
 	},
 };

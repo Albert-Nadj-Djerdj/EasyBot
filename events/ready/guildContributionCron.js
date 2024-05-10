@@ -5,6 +5,9 @@ module.exports = {
 	name: 'guildContributionCron',
 	async execute(client, Member, DopePoints) {
 		const guild = client.guilds.cache.get(process.env.GUILD_ID);
+		const memberChannel = guild.channels.cache.get(process.env.MEMBER_CHANNEL_ID);
+		const awayTag = memberChannel.availableTags.filter((tag) => tag.name === 'away')[0];
+		const duoTag = memberChannel.availableTags.filter((tag) => tag.name === 'duo')[0];
 
 		const memberList = await guild.members.fetch();
 
@@ -15,6 +18,11 @@ module.exports = {
 				const channelsThreads = await guild.channels.cache.get(process.env.MEMBER_CHANNEL_ID).threads.fetch();
 
 				channelsThreads.threads.forEach(async (element) => {
+
+					if (element.appliedTags.includes(awayTag.id) || element.appliedTags.includes(duoTag.id)) {
+						return;
+					}
+
 					const member = await Member.findOne({
 						where: {
 							discord_name: element.name.split('(')[1].split(')')[0],

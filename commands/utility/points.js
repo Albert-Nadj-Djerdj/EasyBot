@@ -161,6 +161,7 @@ module.exports = {
 					defaults: {
 						dope_points: 20,
 						memberId: memberDB.dataValues.id,
+						contribution_sum: 25,
 					},
 				});
 
@@ -224,6 +225,7 @@ module.exports = {
 				defaults: {
 					dope_points: 20,
 					memberId: memberDB.dataValues.id,
+					contribution_sum: 25,
 				},
 			});
 

@@ -26,13 +26,19 @@ module.exports = {
 			},
 		});
 
-		await memberDB.update({
-			is_active: false,
-		});
+		try {
+			await memberDB.update({
+				is_active: false,
+			});
 
-		const memberChannel = member.guild.channels.cache.get(process.env.MEMBER_CHANNEL_ID);
-		const thread = await memberChannel.threads.fetch(memberDB.dataValues.member_profile_post_id);
+			const memberChannel = member.guild.channels.cache.get(process.env.MEMBER_CHANNEL_ID);
+			const thread = await memberChannel.threads.fetch(memberDB.dataValues.member_profile_post_id);
 
-		await thread.setArchived(true);
+			await thread.setArchived(true);
+		}
+		catch (e) {
+			console.log();
+		}
+
 	},
 };

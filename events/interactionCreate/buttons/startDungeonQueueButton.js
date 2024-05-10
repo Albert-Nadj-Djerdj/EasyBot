@@ -232,7 +232,7 @@ module.exports = {
 								catch (e) {
 									console.log(e);
 								}
-							}, 20_000);
+							}, 3_600_000);
 						})
 						.catch((e) => { console.log(e); });
 
